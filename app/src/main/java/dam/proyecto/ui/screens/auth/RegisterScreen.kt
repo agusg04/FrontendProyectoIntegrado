@@ -1,4 +1,4 @@
-package dam.proyecto.ui.screens
+package dam.proyecto.ui.screens.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,14 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import dam.proyecto.R
 import dam.proyecto.ui.components.StyledButton
 import dam.proyecto.ui.components.StyledText
 import dam.proyecto.ui.components.StyledTextField
@@ -45,16 +42,20 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
 
     val focusManager = LocalFocusManager.current
 
-    Scaffold (
+    LaunchedEffect(Unit) {
+        authViewModel.cleanErrors()
+    }
+
+    Scaffold(
         containerColor = Color.White,
         content = { innerpadding ->
-            Column (
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerpadding),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
-            ){
+            ) {
                 Spacer(modifier = Modifier.height(20.dp))
 
                 StyledText(
@@ -158,7 +159,16 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
                 Spacer(modifier = Modifier.height(30.dp))
 
                 StyledButton(
-                    onClick = {  },
+                    onClick = {
+                        authViewModel.register(
+                            name,
+                            lastName1,
+                            lastName2,
+                            email,
+                            password,
+                            passwordAgain
+                        )
+                    },
                     text = "Registrarse",
                 )
 
@@ -168,6 +178,21 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
                     onClick = { navController.navigate("welcome") },
                     text = "Volver"
                 )
+
+                authViewModel.registerError?.let {
+                    Text(text = it, color = Color.Red)
+                }
+
+                authViewModel.registerState?.let {
+                    if (it) {
+                        LaunchedEffect(Unit) {
+                            navController.navigate("main") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                            authViewModel.cleanErrors()
+                        }
+                    }
+                }
             }
         }
     )

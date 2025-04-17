@@ -1,19 +1,31 @@
-package dam.proyecto.ui.screens
+package dam.proyecto.ui.screens.auth
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.focus.FocusDirection
 import dam.proyecto.ui.components.StyledButton
 import dam.proyecto.ui.components.StyledText
 import dam.proyecto.ui.components.StyledTextField
@@ -25,6 +37,10 @@ fun LoginScreen(navController: NavController, authViewModel: AuthViewModel) {
     var password by remember { mutableStateOf("") }
 
     val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(Unit) {
+        authViewModel.cleanErrors()
+    }
 
     Scaffold(
         containerColor = Color.White,
@@ -76,7 +92,7 @@ fun LoginScreen(navController: NavController, authViewModel: AuthViewModel) {
                 Spacer(modifier = Modifier.height(40.dp))
 
                 StyledButton(
-                    onClick = {  },
+                    onClick = { authViewModel.login(email, password) },
                     text = "Iniciar Sesión",
                 )
 
@@ -86,9 +102,22 @@ fun LoginScreen(navController: NavController, authViewModel: AuthViewModel) {
                     onClick = { navController.navigate("welcome") },
                     text = "Volver"
                 )
-            }
 
+                authViewModel.loginError?.let {
+                    Text(text = it, color = Color.Red)
+                }
+
+                authViewModel.loginState?.let {
+                    if (it) {
+                        LaunchedEffect(Unit) {
+                            navController.navigate("main") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                            authViewModel.cleanErrors()
+                        }
+                    }
+                }
+            }
         }
     )
-
 }

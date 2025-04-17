@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -15,6 +16,7 @@ import dam.proyecto.ui.viewmodel.AuthViewModel
 fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
     val navController = rememberNavController()
     Scaffold(
+        containerColor = Color.White,
         bottomBar = { BottomBar(navController) }
     ) { innerPadding ->
         NavHost(
@@ -24,15 +26,14 @@ fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
         ) {
             composable("home") { HomeScreen() }
             composable("wall") { WallScreen() }
-            /*composable("profile") {
+            composable("profile") {
                 if (authViewModel.isLoggedIn) {
-                    UserProfileScreen()
+                    //UserProfileScreen()
                 } else {
-                    GuestProfileScreen()
+                    //GuestProfileScreen()
                 }
             }
 
-             */
         }
     }
 }
