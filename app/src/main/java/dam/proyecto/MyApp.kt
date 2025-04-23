@@ -9,6 +9,5 @@ import dam.proyecto.ui.viewmodel.AuthViewModel
 @Composable
 fun MyApp(authViewModel: AuthViewModel = viewModel()) {
     val navController = rememberNavController()
-
     AppNavigation(navController = navController, authViewModel = authViewModel)
 }

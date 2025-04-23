@@ -1,8 +1,8 @@
-package dam.proyecto.ui.screens
+package dam.proyecto.ui.screens.app
 
 import androidx.compose.runtime.Composable
 
 @Composable
-fun HomeScreen() {
+fun ProfileScreen() {
 
 }

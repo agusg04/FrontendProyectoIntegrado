@@ -17,7 +17,7 @@ fun BottomBar(navController: NavController) {
     val currentRoute = navBackStackEntry.value?.destination?.route
 
     NavigationBar(
-        containerColor = Color.Gray
+        containerColor = Color.White
     ) {
         BottomNavItem.items.forEach { item ->
             NavigationBarItem(
@@ -31,7 +31,8 @@ fun BottomBar(navController: NavController) {
                 onClick = {
                     if (currentRoute != item.route) {
                         navController.navigate(item.route) {
-                            popUpTo(navController.graph.startDestinationId) {
+                            popUpTo(navController.graph.startDestinationId) {                                //inclusive = false
+                                inclusive = false
                                 saveState = true
                             }
                             launchSingleTop = true
@@ -40,7 +41,6 @@ fun BottomBar(navController: NavController) {
                     }
                 }
             )
-
         }
     }
 }

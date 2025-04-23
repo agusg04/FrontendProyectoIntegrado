@@ -5,20 +5,57 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dam.proyecto.data.model.RallyData
 import dam.proyecto.data.repository.AuthRepository
+import dam.proyecto.data.repository.RallyRepository
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
 
     private val authRepository = AuthRepository()
+    private val rallyRepository = RallyRepository()
+
+    var username by mutableStateOf<String?>(null)
+        private set
+
+    //RALLY
+    var rallyData by mutableStateOf<RallyData?>(null)
+        private set
+
+    var nombreRally by mutableStateOf<String?>(null)
+        private set
+
+    var descripcionRally by mutableStateOf<String?>(null)
+        private set
+
+    var fechaInicio by mutableStateOf<String?>(null)
+        private set
+
+    var fechaFin by mutableStateOf<String?>(null)
+        private set
+
+    var plazoVotacion by mutableStateOf<String?>(null)
+        private set
+
+    var votosPorUsuario by mutableStateOf<Int?>(null)
+        private set
+
+    var maxFotosUsuario by mutableStateOf<Int?>(null)
+        private set
+
+    var primerPremio by mutableStateOf<Int?>(null)
+        private set
+
+    var segundoPremio by mutableStateOf<Int?>(null)
+        private set
+
+    var tercerPremio by mutableStateOf<Int?>(null)
+        private set
 
     var isLoggedIn by mutableStateOf(false)
         private set
 
     var isGuest by mutableStateOf(false)
-        private set
-
-    var username by mutableStateOf<String?>(null)
         private set
 
     var token by mutableStateOf<String?>(null)
@@ -30,11 +67,17 @@ class AuthViewModel : ViewModel() {
     var registerError by mutableStateOf<String?>(null)
         private set
 
-    var loginState by mutableStateOf<Boolean?>(null)
+    var apiError by mutableStateOf<String?>(null)
         private set
 
-    var registerState by mutableStateOf<Boolean?>(null)
+    var logOutError by mutableStateOf<String?>(null)
         private set
+
+    var loginSuccess by mutableStateOf<Boolean?>(null)
+
+    var registerSuccess by mutableStateOf<Boolean?>(null)
+
+    var logoutSuccess by mutableStateOf<Boolean?>(null)
 
     var isLoading by mutableStateOf(false)
         private set
@@ -51,19 +94,14 @@ class AuthViewModel : ViewModel() {
             val result = authRepository.login(email, password)
             isLoading = false
             result.onSuccess { response ->
-                isLoggedIn = true
-                isGuest = false
-                username = response.nombre
-                token = response.token
+                onAuthSuccess(response.nombre, response.token)
                 loginError = null
-                loginState = true
-
+                loginSuccess = true
             }.onFailure { error ->
                 loginError = error.message ?: "Error desconocido"
                 isLoggedIn = false
                 token = null
             }
-
         }
     }
 
@@ -72,18 +110,12 @@ class AuthViewModel : ViewModel() {
         lastName2: String, email: String,
         password: String, passwordAgain: String
     ) {
-
         if (password != passwordAgain) {
             registerError = "Las contraseñas no coinciden"
             return
         }
 
-        registerError = null
-
-        if (listOf(
-                name, lastName1, lastName2, email, password
-            ).any { it.isBlank() }
-        ) {
+        if (listOf(name, lastName1, lastName2, email, password).any { it.isBlank() }) {
             registerError = "Rellene todos los campos"
             return
         }
@@ -95,17 +127,66 @@ class AuthViewModel : ViewModel() {
             val result = authRepository.register(name, lastName1, lastName2, email, password)
             isLoading = false
             result.onSuccess { response ->
-                isLoggedIn = true
-                isGuest = false
-                username = response.nombre
-                token = response.token
+                onAuthSuccess(response.nombre, response.token)
                 registerError = null
-                registerState = true
+                registerSuccess = true
 
             }.onFailure { error ->
                 registerError = error.message ?: "Error desconocido"
                 isLoggedIn = false
                 token = null
+            }
+        }
+    }
+
+    fun logout() {
+        isLoading = true
+        logoutSuccess = null
+        logOutError = null
+
+        viewModelScope.launch {
+            val currentToken = token
+
+            if (currentToken != null) {
+                val result = authRepository.logout(currentToken)
+                result.onFailure { error ->
+                    logOutError = error.message ?: "Error al cerrar sesión"
+                }
+            }
+
+            username = null
+            isLoggedIn = false
+            isGuest = false
+            token = null
+            isLoading = false
+            logoutSuccess = true
+        }
+    }
+
+
+    fun requestRallyInfo(
+    ) {
+        viewModelScope.launch {
+            isLoading = true
+            val result = rallyRepository.requestRallyInfo()
+            isLoading = false
+            result.onSuccess { data ->
+                rallyData = data
+
+                nombreRally = data.nombreRally
+                descripcionRally = data.descripcionRally
+                fechaInicio = data.fechaInicio
+                fechaFin = data.fechaFin
+                plazoVotacion = data.plazoVotacion
+                votosPorUsuario = data.votosPorUsuario
+                maxFotosUsuario = data.maxFotosUsuario
+                primerPremio = data.primerPremio
+                segundoPremio = data.segundoPremio
+                tercerPremio = data.tercerPremio
+
+                apiError = null
+            }.onFailure { error ->
+                apiError = error.message ?: "Error desconocido"
             }
         }
     }
@@ -118,18 +199,33 @@ class AuthViewModel : ViewModel() {
         loginError = null
     }
 
-    fun logout() {
-        username = null
-        isLoggedIn = false
-        isGuest = false
-        token = null
+    fun cleanLoginErrors() {
         loginError = null
     }
 
-    fun cleanErrors() {
-        loginError = null
-        loginState = null
+    fun cleanRegisterErrors() {
         registerError = null
-        registerState = null
+    }
+
+    fun resetLoginState() {
+        loginError = null
+        loginSuccess = false
+    }
+
+    fun resetRegisterState() {
+        registerError = null
+        registerSuccess = false
+    }
+
+    fun resetLogoutState() {
+        logOutError = null
+        logoutSuccess = false
+    }
+
+    private fun onAuthSuccess(name: String, authToken: String) {
+        isLoggedIn = true
+        isGuest = false
+        username = name
+        token = authToken
     }
 }

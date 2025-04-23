@@ -1,6 +1,7 @@
 package dam.proyecto.ui.screens.auth
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import dam.proyecto.ui.components.ErrorBox
 import dam.proyecto.ui.components.StyledButton
 import dam.proyecto.ui.components.StyledText
 import dam.proyecto.ui.components.StyledTextField
@@ -43,157 +44,165 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(Unit) {
-        authViewModel.cleanErrors()
+        authViewModel.cleanRegisterErrors()
     }
 
     Scaffold(
         containerColor = Color.White,
         content = { innerpadding ->
-            Column(
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerpadding),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxSize(),
+                contentAlignment = Alignment.BottomCenter
             ) {
-                Spacer(modifier = Modifier.height(20.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerpadding),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                StyledText(
-                    text = "Crea tu cuenta",
-                    fontSize = 40.sp,
-                    color = Color.Black,
-                )
-
-                Spacer(modifier = Modifier.height(40.dp))
-
-                StyledTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = "Nombre",
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = androidx.compose.ui.text.input.ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    StyledText(
+                        text = "Crea tu cuenta",
+                        fontSize = 40.sp,
+                        color = Color.Black,
                     )
-                )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(40.dp))
 
-                StyledTextField(
-                    value = lastName1,
-                    onValueChange = { lastName1 = it },
-                    label = "Primer Apellido",
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = androidx.compose.ui.text.input.ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                StyledTextField(
-                    value = lastName2,
-                    onValueChange = { lastName2 = it },
-                    label = "Segundo Apellido",
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = androidx.compose.ui.text.input.ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                StyledTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = "Correo electrónico",
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = androidx.compose.ui.text.input.ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                StyledTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = "Contraseña",
-                    modifier = Modifier.fillMaxWidth(),
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = androidx.compose.ui.text.input.ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                StyledTextField(
-                    value = passwordAgain,
-                    onValueChange = { passwordAgain = it },
-                    label = "Repetir contraseña",
-                    modifier = Modifier.fillMaxWidth(),
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = androidx.compose.ui.text.input.ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = { focusManager.clearFocus() }
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(30.dp))
-
-                StyledButton(
-                    onClick = {
-                        authViewModel.register(
-                            name,
-                            lastName1,
-                            lastName2,
-                            email,
-                            password,
-                            passwordAgain
+                    StyledTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = "Nombre",
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
                         )
-                    },
-                    text = "Registrarse",
-                )
+                    )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                StyledButton(
-                    onClick = { navController.navigate("welcome") },
-                    text = "Volver"
-                )
+                    StyledTextField(
+                        value = lastName1,
+                        onValueChange = { lastName1 = it },
+                        label = "Primer Apellido",
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        )
+                    )
 
-                authViewModel.registerError?.let {
-                    Text(text = it, color = Color.Red)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    StyledTextField(
+                        value = lastName2,
+                        onValueChange = { lastName2 = it },
+                        label = "Segundo Apellido",
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    StyledTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = "Correo electrónico",
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    StyledTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = "Contraseña",
+                        modifier = Modifier.fillMaxWidth(),
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    StyledTextField(
+                        value = passwordAgain,
+                        onValueChange = { passwordAgain = it },
+                        label = "Repetir contraseña",
+                        modifier = Modifier.fillMaxWidth(),
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    StyledButton(
+                        onClick = {
+                            authViewModel.register(
+                                name,
+                                lastName1,
+                                lastName2,
+                                email,
+                                password,
+                                passwordAgain
+                            )
+                        },
+                        text = "Registrarse",
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    StyledButton(
+                        onClick = { navController.popBackStack() },
+                        text = "Volver"
+                    )
                 }
 
-                authViewModel.registerState?.let {
-                    if (it) {
-                        LaunchedEffect(Unit) {
-                            navController.navigate("main") {
-                                popUpTo("login") { inclusive = true }
-                            }
-                            authViewModel.cleanErrors()
-                        }
-                    }
+                authViewModel.registerError?.let { error ->
+                    ErrorBox(
+                        message = error,
+                        onErrorClosed = { authViewModel.cleanRegisterErrors() }
+                    )
                 }
             }
         }
     )
+
+    LaunchedEffect(authViewModel.registerSuccess) {
+        if (authViewModel.registerSuccess == true) {
+            navController.navigate("main") {
+                popUpTo("login") { inclusive = true }
+                launchSingleTop = true
+            }
+            authViewModel.cleanRegisterErrors()
+        }
+    }
 }

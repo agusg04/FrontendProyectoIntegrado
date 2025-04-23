@@ -10,25 +10,35 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dam.proyecto.ui.components.BottomBar
+import dam.proyecto.ui.screens.app.HomeScreen
+import dam.proyecto.ui.screens.app.ProfileScreen
+import dam.proyecto.ui.screens.app.WallScreen
 import dam.proyecto.ui.viewmodel.AuthViewModel
 
 @Composable
-fun MainScreen(navController: NavHostController, authViewModel: AuthViewModel) {
-    val navController = rememberNavController()
+fun MainScreen(
+    globalNavController: NavHostController,
+    authViewModel: AuthViewModel
+
+) {
+     val localNavController = rememberNavController()
+
     Scaffold(
         containerColor = Color.White,
-        bottomBar = { BottomBar(navController) }
+        bottomBar = { BottomBar(localNavController) }
     ) { innerPadding ->
+
         NavHost(
-            navController,
+            localNavController,
             startDestination = "home",
-            Modifier.padding(innerPadding)
+            Modifier.padding(innerPadding),
+            route = "main_graph", // clave para restoreState
         ) {
-            composable("home") { HomeScreen() }
+            composable("home") { HomeScreen(localNavController, globalNavController, authViewModel) }
             composable("wall") { WallScreen() }
             composable("profile") {
                 if (authViewModel.isLoggedIn) {
-                    //UserProfileScreen()
+                    ProfileScreen()
                 } else {
                     //GuestProfileScreen()
                 }
