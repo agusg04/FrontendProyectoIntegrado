@@ -6,7 +6,7 @@ data class RallyData(
     val fechaInicio: String,
     val fechaFin: String,
     val plazoVotacion: String,
-    val votosPorUsuario: Int,
+    val maxVotosUsuario: Int,
     val maxFotosUsuario: Int,
     val primerPremio: Int,
     val segundoPremio: Int,

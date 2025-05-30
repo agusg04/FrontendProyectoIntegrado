@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dam.proyecto.data.model.RallyData
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -69,7 +68,7 @@ fun RallyInfoCard(rally: RallyData?) {
 
             InfoLabel(
                 "Votos por usuario",
-                (rally?.votosPorUsuario ?: "No disponible").toString(),
+                (rally?.maxVotosUsuario ?: "No disponible").toString(),
                 Color(0xFF333333),
                 boldLabel = false,
                 boldContent = true
@@ -117,9 +116,8 @@ fun RallyInfoCard(rally: RallyData?) {
 fun String?.formatFecha(): String {
     return try {
         this?.let {
-            val instant = java.time.Instant.parse(it)
-            val localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate()
-            localDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+            val localDateTime = java.time.LocalDateTime.parse(it)
+            localDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
         } ?: "No disponible"
     } catch (e: Exception) {
         "No disponible"

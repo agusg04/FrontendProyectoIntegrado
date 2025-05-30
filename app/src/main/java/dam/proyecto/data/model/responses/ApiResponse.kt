@@ -1,4 +1,4 @@
-package dam.proyecto.data.model
+package dam.proyecto.data.model.responses
 
 data class ApiResponse<T>(
     val success: Boolean,

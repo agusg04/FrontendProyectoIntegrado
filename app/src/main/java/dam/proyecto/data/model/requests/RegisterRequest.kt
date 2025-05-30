@@ -1,4 +1,4 @@
-package dam.proyecto.data.model
+package dam.proyecto.data.model.requests
 
 data class RegisterRequest(
     val name: String,

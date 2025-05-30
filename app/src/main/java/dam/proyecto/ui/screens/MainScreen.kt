@@ -35,15 +35,8 @@ fun MainScreen(
             route = "main_graph", // clave para restoreState
         ) {
             composable("home") { HomeScreen(localNavController, globalNavController, authViewModel) }
-            composable("wall") { WallScreen() }
-            composable("profile") {
-                if (authViewModel.isLoggedIn) {
-                    ProfileScreen()
-                } else {
-                    //GuestProfileScreen()
-                }
-            }
-
+            composable("wall") { WallScreen(authViewModel) }
+            composable("profile") { ProfileScreen() }
         }
     }
 }

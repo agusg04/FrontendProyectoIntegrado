@@ -16,4 +16,22 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    /*
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
+     */
+    /*
+    override fun onStop() {
+        super.onStop()
+    }
+     */
+    /*
+    override fun onStart() {
+        super.onStart()
+    }
+    
+     */
 }

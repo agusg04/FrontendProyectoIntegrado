@@ -5,52 +5,43 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dam.proyecto.data.model.FotografiaPost
 import dam.proyecto.data.model.RallyData
+import dam.proyecto.data.network.RetrofitClient
 import dam.proyecto.data.repository.AuthRepository
+import dam.proyecto.data.repository.PhotoRepository
 import dam.proyecto.data.repository.RallyRepository
+import dam.proyecto.data.repository.VoteRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
 
     private val authRepository = AuthRepository()
     private val rallyRepository = RallyRepository()
+    private val photoRepository = PhotoRepository()
+    private val voteRepository = VoteRepository()
 
     var username by mutableStateOf<String?>(null)
+        private set
+
+    var accessToken by mutableStateOf<String?>(null)
+        private set
+
+    var refreshToken by mutableStateOf<String?>(null)
         private set
 
     //RALLY
     var rallyData by mutableStateOf<RallyData?>(null)
         private set
+    //FIN RALLY
 
-    var nombreRally by mutableStateOf<String?>(null)
-        private set
+    //FOTOS
+    var listaFotos by mutableStateOf<List<FotografiaPost>?>(null)
 
-    var descripcionRally by mutableStateOf<String?>(null)
-        private set
-
-    var fechaInicio by mutableStateOf<String?>(null)
-        private set
-
-    var fechaFin by mutableStateOf<String?>(null)
-        private set
-
-    var plazoVotacion by mutableStateOf<String?>(null)
-        private set
-
-    var votosPorUsuario by mutableStateOf<Int?>(null)
-        private set
-
-    var maxFotosUsuario by mutableStateOf<Int?>(null)
-        private set
-
-    var primerPremio by mutableStateOf<Int?>(null)
-        private set
-
-    var segundoPremio by mutableStateOf<Int?>(null)
-        private set
-
-    var tercerPremio by mutableStateOf<Int?>(null)
-        private set
+    var listaVotos by mutableStateOf<List<Long>?>(null)
+    //FIN FOTOS
 
     var isLoggedIn by mutableStateOf(false)
         private set
@@ -58,9 +49,7 @@ class AuthViewModel : ViewModel() {
     var isGuest by mutableStateOf(false)
         private set
 
-    var token by mutableStateOf<String?>(null)
-        private set
-
+    //ERRORES
     var loginError by mutableStateOf<String?>(null)
         private set
 
@@ -73,34 +62,154 @@ class AuthViewModel : ViewModel() {
     var logOutError by mutableStateOf<String?>(null)
         private set
 
-    var loginSuccess by mutableStateOf<Boolean?>(null)
+    var showServerError by mutableStateOf(false)
+        private set
 
-    var registerSuccess by mutableStateOf<Boolean?>(null)
+    var votoError by mutableStateOf<String?>(null)
+        private set
+    //FIN ERRORES
 
-    var logoutSuccess by mutableStateOf<Boolean?>(null)
+    var loginSuccess by mutableStateOf<Boolean?>(false)
+
+    var registerSuccess by mutableStateOf<Boolean?>(false)
+
+    var logoutSuccess by mutableStateOf<Boolean?>(false)
 
     var isLoading by mutableStateOf(false)
         private set
 
-    fun login(email: String, password: String) {
-        if (email.isBlank() || password.isBlank()) {
-            loginError = "Rellene ambos campos"
+    var showServerSuccess by mutableStateOf<Boolean?>(false)
+        private set
+
+    var isServerAlive by mutableStateOf<Boolean?>(null)
+        private set
+
+    var isRefreshingData by mutableStateOf(false)
+        private set
+
+    private var serverCheckJob: Job? = null
+
+    private var lastServerStatus: Boolean? = null
+
+    val datosCargados: Boolean
+        get() = listaFotos != null && (!isLoggedIn || listaVotos != null)
+
+    private fun validateEmptyFields(vararg fields: String): String? {
+        return if (fields.any { it.isBlank() }) {
+            "Rellene todos los campos"
+        } else {
+            null
+        }
+    }
+
+    private fun validateEmail(email: String): String? {
+        return if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            "Email no válido"
+        } else {
+            null
+        }
+    }
+
+    fun checkServerStatus() {
+        viewModelScope.launch {
+            isLoading = true
+            val result = authRepository.checkServerStatus()
+            isLoading = false
+
+            result.onSuccess { alive ->
+                if (lastServerStatus != null) {
+
+                    if (lastServerStatus == false && alive) {
+                        showServerSuccess = true
+                        showServerError = false
+                    }
+
+                    else if (lastServerStatus == true && !alive) {
+                        showServerError = true
+                        showServerSuccess = false
+                    }
+                } else {
+
+                    if (!alive) {
+                        showServerError = true
+                    } //else {
+                        //showServerSuccess = true
+                    //}
+                }
+                lastServerStatus = alive
+                isServerAlive = alive
+
+            }.onFailure {
+                if (lastServerStatus != false) {
+                    showServerError = true
+                    showServerSuccess = false
+                }
+                lastServerStatus = false
+                isServerAlive = false
+            }
+        }
+    }
+
+    fun startCheckingServerStatus(intervalMillis: Long = 5000L) {
+        if (serverCheckJob != null) return
+
+        serverCheckJob = viewModelScope.launch {
+            checkServerStatus()
+            delay(intervalMillis)
+            while (true) {
+                checkServerStatus()
+                delay(intervalMillis)
+            }
+        }
+    }
+
+    fun stopCheckingServerStatus() {
+        serverCheckJob?.cancel()
+        serverCheckJob = null
+    }
+
+    fun generarAccessToken() {
+
+        val currentRefreshToken = refreshToken
+        if (currentRefreshToken == null) {
+            apiError = "No hay refresh token disponible"
             return
         }
-        loginError = null
+
+        viewModelScope.launch {
+            isLoading = true
+            val result = refreshToken?.let { authRepository.refreshToken(it) }
+            isLoading = false
+            result?.onSuccess { response ->
+                asignarTokens(response.accessToken)
+            }?.onFailure { error ->
+                apiError = error.message ?: "Error al renovar el token"
+            }
+        }
+
+    }
+
+    fun login(email: String, password: String) {
+        loginError = validateEmptyFields(email, password)
+        if (loginError != null) return
+
+        loginError = validateEmail(email)
+        if (loginError != null) return
+
         isLoading = true
 
         viewModelScope.launch {
             val result = authRepository.login(email, password)
             isLoading = false
             result.onSuccess { response ->
-                onAuthSuccess(response.nombre, response.token)
+                onAuthSuccess(response.nombre, response.accessToken, response.refreshToken)
                 loginError = null
                 loginSuccess = true
             }.onFailure { error ->
                 loginError = error.message ?: "Error desconocido"
                 isLoggedIn = false
-                token = null
+                accessToken = null
+                refreshToken = null
             }
         }
     }
@@ -110,31 +219,32 @@ class AuthViewModel : ViewModel() {
         lastName2: String, email: String,
         password: String, passwordAgain: String
     ) {
+        registerError = validateEmptyFields(name, lastName1, lastName2, email, password)
+        if (registerError != null) return
+
         if (password != passwordAgain) {
             registerError = "Las contraseñas no coinciden"
             return
         }
 
-        if (listOf(name, lastName1, lastName2, email, password).any { it.isBlank() }) {
-            registerError = "Rellene todos los campos"
-            return
-        }
-
-        registerError = null
+        registerError = validateEmail(email)
+        if (registerError != null) return
+        
         isLoading = true
 
         viewModelScope.launch {
             val result = authRepository.register(name, lastName1, lastName2, email, password)
             isLoading = false
             result.onSuccess { response ->
-                onAuthSuccess(response.nombre, response.token)
+                onAuthSuccess(response.nombre, response.accessToken, response.refreshToken)
                 registerError = null
                 registerSuccess = true
 
             }.onFailure { error ->
                 registerError = error.message ?: "Error desconocido"
                 isLoggedIn = false
-                token = null
+                accessToken = null
+                refreshToken = null
             }
         }
     }
@@ -143,46 +253,83 @@ class AuthViewModel : ViewModel() {
         isLoading = true
         logoutSuccess = null
         logOutError = null
+        listaFotos = null
+        listaVotos = null
+
+        if (accessToken == null && refreshToken == null) {
+            logOutError = "Error al cerrar sesión"
+            isLoading = false
+            return
+        }
 
         viewModelScope.launch {
-            val currentToken = token
+            val currentAccessToken = accessToken
+            val currentRefreshToken = refreshToken
 
-            if (currentToken != null) {
-                val result = authRepository.logout(currentToken)
-                result.onFailure { error ->
+            if (currentAccessToken != null && currentRefreshToken != null) {
+                val result = authRepository.logout(currentAccessToken, currentRefreshToken)
+
+                result.onSuccess {
+                    listaVotos = null
+
+                }.onFailure { error ->
                     logOutError = error.message ?: "Error al cerrar sesión"
                 }
-            }
 
-            username = null
-            isLoggedIn = false
-            isGuest = false
-            token = null
-            isLoading = false
-            logoutSuccess = true
+                stopCheckingServerStatus()
+                username = null
+                isLoggedIn = false
+                isGuest = false
+                accessToken = null
+                refreshToken = null
+                isLoading = false
+                logoutSuccess = true
+            }
         }
     }
 
 
-    fun requestRallyInfo(
-    ) {
+    fun requestRallyInfo() {
         viewModelScope.launch {
+            isRefreshingData = true
             isLoading = true
-            val result = rallyRepository.requestRallyInfo()
+            val result = rallyRepository.getRallyInfo()
             isLoading = false
             result.onSuccess { data ->
                 rallyData = data
 
-                nombreRally = data.nombreRally
-                descripcionRally = data.descripcionRally
-                fechaInicio = data.fechaInicio
-                fechaFin = data.fechaFin
-                plazoVotacion = data.plazoVotacion
-                votosPorUsuario = data.votosPorUsuario
-                maxFotosUsuario = data.maxFotosUsuario
-                primerPremio = data.primerPremio
-                segundoPremio = data.segundoPremio
-                tercerPremio = data.tercerPremio
+                apiError = null
+            }.onFailure { error ->
+                apiError = error.message ?: "Error desconocido"
+            }
+            isRefreshingData = false
+        }
+    }
+
+    fun requestVotes() {
+        viewModelScope.launch {
+            isRefreshingData = true
+            isLoading = true
+            val result = voteRepository.getVotes()
+            isLoading = false
+            result.onSuccess { data ->
+                listaVotos = data.idsFotosVotadas
+
+                apiError = null
+            }.onFailure { error->
+                apiError = error.message ?: "Error desconocido"
+            }
+            isRefreshingData = false
+        }
+    }
+
+    fun requestPhotos() {
+        viewModelScope.launch {
+            isLoading = true
+            val result = photoRepository.getAllPhotos()
+            isLoading = false
+            result.onSuccess { data ->
+                listaFotos = data.photos.toList()
 
                 apiError = null
             }.onFailure { error ->
@@ -191,11 +338,95 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun votar(idFoto: Long) {
+        val maxVotos = rallyData?.maxVotosUsuario
+        val numVotosActuales = listaVotos?.size ?: 0
+
+        if (maxVotos != null && numVotosActuales >= maxVotos) {
+            votoError = "Límite de votos alcanzado"
+            return
+        }
+
+        viewModelScope.launch {
+            isLoading = true
+            val result = voteRepository.vote(idFoto)
+            isLoading = false
+            result.onSuccess {
+
+                val votosActuales = listaVotos?.toMutableList() ?: mutableListOf()
+                if (!votosActuales.contains(idFoto)) {
+                    votosActuales.add(idFoto)
+                }
+                listaVotos = votosActuales
+
+                listaFotos = listaFotos?.map { foto ->
+                    if (foto.id == idFoto) {
+                        foto.copy(
+                            votada = true,
+                            resultadoPuntajeTotal = (foto.resultadoPuntajeTotal ?: 0) + 1
+                        )
+                    } else {
+                        foto
+                    }
+                }?.toList()
+
+                apiError = null
+            }.onFailure { error ->
+                apiError = error.message ?: "Error desconocido"
+            }
+        }
+    }
+
+    fun quitarVoto(idFoto: Long) {
+        viewModelScope.launch {
+            isLoading = true
+            val result = voteRepository.removeVote(idFoto)
+            println(result)
+            isLoading = false
+            result.onSuccess {
+
+                val votosActuales = listaVotos?.toMutableList() ?: mutableListOf()
+                if (votosActuales.contains(idFoto)) {
+                    votosActuales.remove(idFoto)
+                }
+                listaVotos = votosActuales
+
+                listaFotos = listaFotos?.map { foto ->
+                    if (foto.id == idFoto) {
+                        foto.copy(
+                            votada = false,
+                            resultadoPuntajeTotal = (foto.resultadoPuntajeTotal ?: 0) - 1
+                        )
+                    } else {
+                        foto
+                    }
+                }?.toList()
+
+                apiError = null
+            }.onFailure { error ->
+                apiError = error.message ?: "Error desconocido"
+            }
+        }
+    }
+
+
+    fun cargarVotos() {
+        val votos = listaVotos ?: return
+        val fotos = listaFotos ?: return
+
+        val nuevasFotos = fotos.map { foto ->
+            foto.copy(votada = votos.contains(foto.id))
+        }
+
+        listaFotos = nuevasFotos
+    }
+
     fun enterAsGuest() {
         username = null
         isGuest = true
         isLoggedIn = false
-        token = null
+        accessToken = null
+        refreshToken = null
         loginError = null
     }
 
@@ -205,6 +436,10 @@ class AuthViewModel : ViewModel() {
 
     fun cleanRegisterErrors() {
         registerError = null
+    }
+
+    fun cleanVoteErrors() {
+        votoError = null
     }
 
     fun resetLoginState() {
@@ -222,10 +457,32 @@ class AuthViewModel : ViewModel() {
         logoutSuccess = false
     }
 
-    private fun onAuthSuccess(name: String, authToken: String) {
+    private fun onAuthSuccess(name: String, accessToken: String, refreshToken: String) {
         isLoggedIn = true
         isGuest = false
         username = name
-        token = authToken
+        asignarTokens(accessToken, refreshToken)
+
+        listaFotos = null
+        listaVotos = null
+    }
+
+    private fun asignarTokens(accessToken: String, refreshToken: String? = null) {
+        this.accessToken = accessToken
+        println("Token de acceso asignado: $accessToken")
+        refreshToken?.let {
+            this.refreshToken = it
+            println("Token de refresco asignado: $refreshToken")
+        }
+        RetrofitClient.accessTokenProvider = { this.accessToken }
+        RetrofitClient.refreshTokenProvider = { this.refreshToken }
+        RetrofitClient.onAccessTokenRefreshed = { nuevoAccessToken ->
+            this.accessToken = nuevoAccessToken
+        }
+    }
+
+    fun dismissServerMessages() {
+        showServerError = false
+        showServerSuccess = false
     }
 }

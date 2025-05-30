@@ -1,13 +1,13 @@
 package dam.proyecto.data.repository
 
-import dam.proyecto.data.model.RallyData
+import dam.proyecto.data.model.FotografiaWallData
 import dam.proyecto.data.network.RetrofitClient.api
 
-class RallyRepository {
+class PhotoRepository {
 
-    suspend fun getRallyInfo(): Result<RallyData> {
+    suspend fun getAllPhotos(): Result<FotografiaWallData> {
         return try {
-            val response = api.getRallyInfo()
+            val response = api.getPhotos()
 
             if (response.success && response.data != null) {
                 Result.success(response.data)
