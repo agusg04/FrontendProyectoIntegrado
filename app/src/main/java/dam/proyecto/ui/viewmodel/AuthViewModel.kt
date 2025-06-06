@@ -7,10 +7,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dam.proyecto.data.model.FotografiaPost
 import dam.proyecto.data.model.RallyData
+import dam.proyecto.data.model.UserData
+import dam.proyecto.data.model.UsuarioId
+import dam.proyecto.data.model.UsuarioRegistroDto
+import dam.proyecto.data.model.enums.Roles
+import dam.proyecto.data.model.responses.LoginResponse
+import dam.proyecto.data.model.responses.RegisterResponse
 import dam.proyecto.data.network.RetrofitClient
 import dam.proyecto.data.repository.AuthRepository
 import dam.proyecto.data.repository.PhotoRepository
 import dam.proyecto.data.repository.RallyRepository
+import dam.proyecto.data.repository.UserRepository
 import dam.proyecto.data.repository.VoteRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -22,15 +29,24 @@ class AuthViewModel : ViewModel() {
     private val rallyRepository = RallyRepository()
     private val photoRepository = PhotoRepository()
     private val voteRepository = VoteRepository()
-
-    var username by mutableStateOf<String?>(null)
-        private set
+    private val userRepository = UserRepository()
 
     var accessToken by mutableStateOf<String?>(null)
         private set
 
     var refreshToken by mutableStateOf<String?>(null)
         private set
+
+    //DATOS USUARIO PROPIO
+    var userData by mutableStateOf<UserData?>(null)
+        private set
+    //FIN DATOS USUARIO PROPIO
+
+    //DATOS USUARIO CRUD
+    var userDataCrud by mutableStateOf<UserData?>(null)
+
+    val userUpdateSuccess = mutableStateOf<Boolean?>(null)
+    //FIN DATOS USUARIO CRUD
 
     //RALLY
     var rallyData by mutableStateOf<RallyData?>(null)
@@ -42,6 +58,11 @@ class AuthViewModel : ViewModel() {
 
     var listaVotos by mutableStateOf<List<Long>?>(null)
     //FIN FOTOS
+
+    //USUARIOS
+    var listaUsuarios by mutableStateOf<List<UsuarioId>?>(null)
+
+    //FIN USUARIOS
 
     var isLoggedIn by mutableStateOf(false)
         private set
@@ -92,7 +113,7 @@ class AuthViewModel : ViewModel() {
     private var lastServerStatus: Boolean? = null
 
     val datosCargados: Boolean
-        get() = listaFotos != null && (!isLoggedIn || listaVotos != null)
+        get() = listaFotos != null && (!isLoggedIn || (userData?.votos.isNullOrEmpty() || listaVotos != null))
 
     private fun validateEmptyFields(vararg fields: String): String? {
         return if (fields.any { it.isBlank() }) {
@@ -168,27 +189,6 @@ class AuthViewModel : ViewModel() {
         serverCheckJob = null
     }
 
-    fun generarAccessToken() {
-
-        val currentRefreshToken = refreshToken
-        if (currentRefreshToken == null) {
-            apiError = "No hay refresh token disponible"
-            return
-        }
-
-        viewModelScope.launch {
-            isLoading = true
-            val result = refreshToken?.let { authRepository.refreshToken(it) }
-            isLoading = false
-            result?.onSuccess { response ->
-                asignarTokens(response.accessToken)
-            }?.onFailure { error ->
-                apiError = error.message ?: "Error al renovar el token"
-            }
-        }
-
-    }
-
     fun login(email: String, password: String) {
         loginError = validateEmptyFields(email, password)
         if (loginError != null) return
@@ -202,7 +202,7 @@ class AuthViewModel : ViewModel() {
             val result = authRepository.login(email, password)
             isLoading = false
             result.onSuccess { response ->
-                onAuthSuccess(response.nombre, response.accessToken, response.refreshToken)
+                onAuthSuccess(response)
                 loginError = null
                 loginSuccess = true
             }.onFailure { error ->
@@ -236,7 +236,7 @@ class AuthViewModel : ViewModel() {
             val result = authRepository.register(name, lastName1, lastName2, email, password)
             isLoading = false
             result.onSuccess { response ->
-                onAuthSuccess(response.nombre, response.accessToken, response.refreshToken)
+                onAuthSuccess(response)
                 registerError = null
                 registerSuccess = true
 
@@ -277,7 +277,7 @@ class AuthViewModel : ViewModel() {
                 }
 
                 stopCheckingServerStatus()
-                username = null
+                userData = null
                 isLoggedIn = false
                 isGuest = false
                 accessToken = null
@@ -313,7 +313,7 @@ class AuthViewModel : ViewModel() {
             val result = voteRepository.getVotes()
             isLoading = false
             result.onSuccess { data ->
-                listaVotos = data.idsFotosVotadas
+                listaVotos = data.idsFotosVotadas.toList()
 
                 apiError = null
             }.onFailure { error->
@@ -333,6 +333,59 @@ class AuthViewModel : ViewModel() {
 
                 apiError = null
             }.onFailure { error ->
+                apiError = error.message ?: "Error desconocido"
+            }
+        }
+    }
+
+    fun requestUsers() {
+        viewModelScope.launch {
+            isLoading = true
+            val result = userRepository.getUsers()
+            isLoading = false
+            result.onSuccess { data ->
+                listaUsuarios = data.usuarios.toList()
+
+                apiError = null
+            }.onFailure { error ->
+                apiError = error.message ?: "Error desconocido"
+            }
+        }
+    }
+
+    fun requestUser(idUsuario: Long) {
+        viewModelScope.launch {
+            isLoading = true
+            val result = userRepository.getUser(idUsuario)
+            isLoading = false
+            result.onSuccess { data ->
+                userDataCrud = data
+
+                apiError = null
+            }.onFailure { error ->
+                apiError = error.message ?: "Error desconocido"
+                userDataCrud = null
+            }
+        }
+    }
+
+    fun updateUser(idUsuario: Long, usuarioEditado: UsuarioRegistroDto) {
+        viewModelScope.launch {
+            isLoading = true
+            val result = userRepository.updateUser(idUsuario, usuarioEditado)
+            isLoading = false
+            result.onSuccess { data ->
+                val antiguos = userDataCrud
+
+                if (antiguos != null) {
+                    userDataCrud = data.toUserData(
+                        votos = antiguos.votos,
+                        fotosSubidas = antiguos.fotosSubidas
+                    )
+                }
+                userUpdateSuccess.value = true
+            }.onFailure { error ->
+                userUpdateSuccess.value = false
                 apiError = error.message ?: "Error desconocido"
             }
         }
@@ -422,7 +475,7 @@ class AuthViewModel : ViewModel() {
     }
 
     fun enterAsGuest() {
-        username = null
+        userData = null
         isGuest = true
         isLoggedIn = false
         accessToken = null
@@ -457,11 +510,31 @@ class AuthViewModel : ViewModel() {
         logoutSuccess = false
     }
 
-    private fun onAuthSuccess(name: String, accessToken: String, refreshToken: String) {
+    private fun onAuthSuccess(loginData: LoginResponse) {
         isLoggedIn = true
         isGuest = false
-        username = name
-        asignarTokens(accessToken, refreshToken)
+        userData = loginData.userData
+        asignarTokens(loginData.accessToken, loginData.refreshToken)
+
+        listaFotos = null
+        listaVotos = null
+    }
+
+    private fun onAuthSuccess(registerData: RegisterResponse) {
+        isLoggedIn = true
+        isGuest = false
+        userData = UserData(
+            registerData.email,
+            registerData.nombre,
+            registerData.apellido1,
+            registerData.apellido2,
+            Roles.USER,
+            null,
+            registerData.fechaRegistro,
+            emptySet(),
+            emptySet(),
+        )
+        asignarTokens(registerData.accessToken, registerData.refreshToken)
 
         listaFotos = null
         listaVotos = null

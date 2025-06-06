@@ -22,12 +22,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import dam.proyecto.ui.components.ErrorBox
-import dam.proyecto.ui.components.StyledButton
+import dam.proyecto.ui.components.buttons.StyledButton
 import dam.proyecto.ui.components.StyledText
 import dam.proyecto.ui.components.StyledTextField
 import dam.proyecto.ui.viewmodel.AuthViewModel
@@ -72,7 +74,7 @@ fun LoginScreen(navController: NavController, authViewModel: AuthViewModel) {
                         label = "Correo electrónico",
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                            imeAction = ImeAction.Next
                         ),
                         keyboardActions = KeyboardActions(
                             onNext = { focusManager.moveFocus(FocusDirection.Down) }
@@ -88,7 +90,8 @@ fun LoginScreen(navController: NavController, authViewModel: AuthViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Password
                         ),
                         keyboardActions = KeyboardActions(
                             onDone = { focusManager.clearFocus() }

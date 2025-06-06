@@ -14,6 +14,7 @@ class AuthInterceptor(
 
     val rutasProtegidas = listOf(
         "api/votes",
+        "api/users"
     )
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -42,6 +43,8 @@ class AuthInterceptor(
             val nuevoAccessToken = runBlocking {
                 authRepository.refreshToken(refreshToken).getOrNull()?.accessToken
             } ?: return response
+
+            //Si despues de pedir el refresco no funciona hacer logout y volver a la pantalla principal
 
             onAccessTokenRefreshed(nuevoAccessToken)
 

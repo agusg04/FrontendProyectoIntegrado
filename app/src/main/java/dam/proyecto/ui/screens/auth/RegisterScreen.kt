@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,12 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import dam.proyecto.ui.components.ErrorBox
-import dam.proyecto.ui.components.StyledButton
+import dam.proyecto.ui.components.buttons.StyledButton
 import dam.proyecto.ui.components.StyledText
 import dam.proyecto.ui.components.StyledTextField
 import dam.proyecto.ui.viewmodel.AuthViewModel
@@ -58,7 +62,8 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerpadding),
+                        .padding(innerpadding)
+                        .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -78,7 +83,7 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
                         label = "Nombre",
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                            imeAction = ImeAction.Next
                         ),
                         keyboardActions = KeyboardActions(
                             onNext = { focusManager.moveFocus(FocusDirection.Down) }
@@ -93,7 +98,7 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
                         label = "Primer Apellido",
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                            imeAction = ImeAction.Next
                         ),
                         keyboardActions = KeyboardActions(
                             onNext = { focusManager.moveFocus(FocusDirection.Down) }
@@ -108,7 +113,7 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
                         label = "Segundo Apellido",
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                            imeAction = ImeAction.Next
                         ),
                         keyboardActions = KeyboardActions(
                             onNext = { focusManager.moveFocus(FocusDirection.Down) }
@@ -123,7 +128,7 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
                         label = "Correo electrónico",
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                            imeAction = ImeAction.Next
                         ),
                         keyboardActions = KeyboardActions(
                             onNext = { focusManager.moveFocus(FocusDirection.Down) }
@@ -139,7 +144,8 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = androidx.compose.ui.text.input.ImeAction.Next
+                            imeAction = ImeAction.Next,
+                            keyboardType = KeyboardType.Password
                         ),
                         keyboardActions = KeyboardActions(
                             onNext = { focusManager.moveFocus(FocusDirection.Down) }
@@ -155,7 +161,8 @@ fun RegisterScreen(navController: NavController, authViewModel: AuthViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Password
                         ),
                         keyboardActions = KeyboardActions(
                             onDone = { focusManager.clearFocus() }

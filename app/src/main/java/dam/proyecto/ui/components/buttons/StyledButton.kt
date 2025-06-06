@@ -1,4 +1,4 @@
-package dam.proyecto.ui.components
+package dam.proyecto.ui.components.buttons
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -21,13 +22,15 @@ fun StyledButton(
     modifier: Modifier = Modifier,
     backgroundColor: Color = Color.Black,
     contentColor: Color = Color.White,
-    shape: Shape = RoundedCornerShape(8.dp)
+    shape: Shape = RoundedCornerShape(8.dp),
+    singleLine: Boolean = true,
+    paddingHorizontal: Dp = 24.dp
 ) {
     Button(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = paddingHorizontal),
         colors = ButtonDefaults.buttonColors(
             containerColor = backgroundColor,
             contentColor = contentColor
@@ -37,6 +40,7 @@ fun StyledButton(
         Text(
             text = text,
             style = TextStyle(color = contentColor),
+            maxLines = if (singleLine) 1 else Int.MAX_VALUE,
             fontSize = 20.sp,
         )
     }

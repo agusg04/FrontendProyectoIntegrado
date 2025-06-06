@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -22,13 +23,16 @@ fun StyledTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     singleLine: Boolean = true,
+    paddingHorizontal: Dp = 24.dp,
+    readOnly: Boolean = false
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
+        readOnly = readOnly,
         label = { Text(label, color = Color.Black) },
         modifier = modifier
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = paddingHorizontal),
         singleLine = singleLine,
         visualTransformation = visualTransformation,
         keyboardOptions = keyboardOptions,

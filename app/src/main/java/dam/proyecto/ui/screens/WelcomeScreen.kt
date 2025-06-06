@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import dam.proyecto.ui.components.ErrorBox
-import dam.proyecto.ui.components.StyledButton
+import dam.proyecto.ui.components.buttons.StyledButton
 import dam.proyecto.ui.components.StyledText
 import dam.proyecto.ui.components.SuccessBox
 import dam.proyecto.ui.viewmodel.AuthViewModel

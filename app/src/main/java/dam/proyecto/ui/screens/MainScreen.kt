@@ -36,7 +36,7 @@ fun MainScreen(
         ) {
             composable("home") { HomeScreen(localNavController, globalNavController, authViewModel) }
             composable("wall") { WallScreen(authViewModel) }
-            composable("profile") { ProfileScreen() }
+            composable("profile") { ProfileScreen(authViewModel) }
         }
     }
 }

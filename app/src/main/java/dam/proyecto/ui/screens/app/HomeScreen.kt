@@ -1,12 +1,10 @@
 package dam.proyecto.ui.screens.app
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -15,12 +13,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import dam.proyecto.ui.components.ErrorBox
+import dam.proyecto.ui.components.LoadScreen
 import dam.proyecto.ui.components.RallyInfoCard
-import dam.proyecto.ui.components.StyledButton
+import dam.proyecto.ui.components.buttons.StyledButton
 import dam.proyecto.ui.components.SuccessBox
 import dam.proyecto.ui.viewmodel.AuthViewModel
 
@@ -64,14 +62,7 @@ fun HomeScreen(
     }
 
     if (authViewModel.rallyData == null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0x00FFFFFF)), // Fondo semitransparente
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = Color(0xFF878FA3))
-        }
+        LoadScreen()
         return
     }
 

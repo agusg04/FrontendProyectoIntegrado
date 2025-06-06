@@ -1,5 +1,5 @@
 package dam.proyecto.data.model
 
 data class ListaVotos(
-    val idsFotosVotadas: List<Long>
+    val idsFotosVotadas: Set<Long>
 )
